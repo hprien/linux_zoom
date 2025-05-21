@@ -49,7 +49,14 @@ void gesture_state_transition(gesture_state_t& gesture_state, int value, double 
 }
 
 void toggle_magnification_glas() {
-    std::cout << "hi" << std::endl;
+    static bool active = false;
+    active = !active;
+
+    std::string command = "gsettings set org.gnome.desktop.a11y.applications screen-magnifier-enabled ";
+    command += active ? "true" : "false";
+
+    // fork, execl, waitppid
+    system(command.c_str());
 }
 
 void handle_quad_tap(double time, int value) {
