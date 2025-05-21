@@ -1,0 +1,10 @@
+[Unit]
+Description=Quad-Tap Gesture Daemon
+After=graphical-session.target
+
+[Service]
+ExecStart=/opt/quad_tap_zoom /dev/input/event6
+Restart=on-failure
+
+[Install]
+WantedBy=default.target
