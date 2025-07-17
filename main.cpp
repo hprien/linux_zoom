@@ -3,6 +3,8 @@
 #include <unistd.h> // read, close
 #include <iostream>
 #include <string>
+#include <thread>
+#include <chrono>
 
 typedef enum {
     IDLE,
@@ -11,6 +13,8 @@ typedef enum {
     SECOND_DOWN,
     SECOND_UP
 } gesture_state_t;
+
+using namespace std::chrono_literals;
 
 std::string get_input_device_name(int device) {
     char device_name[256];
@@ -81,7 +85,20 @@ void handle_quad_tap(double time, int value) {
 
 void poll_events(int device) {
     struct input_event event;
-    while (read(device, &event, sizeof(event)) > 0) {
+    while(true) {
+        int res = read(device, &event, sizeof(event));
+        if(res <= 0) {
+            std::cout << "error reading device: " << errno << std::endl;
+            if(errno == ENODEV) {
+                std::cout << "error reading device: no such device, wait 5s" << std::endl;
+                std::this_thread::sleep_for(5s);
+
+                throw std::runtime_error("no such device");
+            }
+
+            throw std::runtime_error("error reading device");
+        }
+
         if(event.type == EV_KEY && event.code == BTN_TOOL_QUADTAP) {
             double time = event.time.tv_sec;
             time += event.time.tv_usec / 1000000.0;
@@ -97,18 +114,36 @@ int main(int argc, char* argv[]) {
     }
 
     const char* device_path = argv[1];
-    int device = open(device_path, O_RDONLY);
+    int device = -1;
 
-    if (device < 0) {
-        perror("can not open device");
-        return 1;
+    while(true) {
+        std::cout << "----- start ----- " << std::endl;
+        device = open(device_path, O_RDONLY);
+
+        if (device < 0) {
+            std::cout << "opening device failed. wait 5s" << std::endl;
+            std::this_thread::sleep_for(5s);
+            continue;
+        }
+
+        std::string device_name = get_input_device_name(device);
+        std::cout << "device opened, read from: " << device_path << " - " << device_name << std::endl;
+
+        try {
+            poll_events(device);
+        }
+        catch(const std::runtime_error &e) {
+            if(e.what() == "no such device") {
+                continue;
+            } else {
+                std::cerr << e.what() << std::endl;
+                return 1;
+            }
+        }
     }
 
-    std::string device_name = get_input_device_name(device);
-    std::cout << "read from: " << device_path << " - " << device_name << std::endl;
-
-    poll_events(device);
-
-    close(device);
-    return 0;
+    if(device != -1) {
+        close(device);
+    }
+    return 1;
 }
