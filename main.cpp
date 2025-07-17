@@ -131,7 +131,8 @@ int main(int argc, char* argv[]) {
             poll_events(device);
         }
         catch(const std::runtime_error &e) {
-            if(e.what() == "no such device") {
+            std::string error_msg = e.what();
+            if(error_msg == "no such device") {
                 continue;
             } else {
                 std::cerr << e.what() << std::endl;
