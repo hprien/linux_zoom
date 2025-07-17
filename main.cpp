@@ -6,6 +6,8 @@
 #include <thread>
 #include <chrono>
 
+#define EXPECTED_ARGUMENT_COUNT 2
+
 typedef enum {
     IDLE,
     FIRST_DOWN,
@@ -28,13 +30,8 @@ std::string get_input_device_name(int device) {
     return device_name;
 }
 
-int print_help(int argc, char* argv[]) {
-    if (argc < 2) {
-        std::cerr << "command usage: " << argv[0] << " /dev/input/eventX" << std::endl;
-        return 1;
-    }
-
-    return 0;
+void print_help(char* app_name) {
+    std::cerr << "command usage: " << app_name << " /dev/input/eventX" << std::endl;
 }
 
 void gesture_state_transition(gesture_state_t& gesture_state, int value, double time_delta) {
@@ -109,7 +106,8 @@ void poll_events(int device) {
 }
 
 int main(int argc, char* argv[]) {
-    if(print_help(argc, argv) == 1) {
+    if(argc != EXPECTED_ARGUMENT_COUNT) {
+        print_help(argv[0]);
         return 1;
     }
 
