@@ -85,7 +85,6 @@ void poll_events(int device) {
     while(true) {
         int res = read(device, &event, sizeof(event));
         if(res <= 0) {
-            std::cout << "error reading device: " << errno << std::endl;
             if(errno == ENODEV) {
                 std::cout << "error reading device: no such device, wait 5s" << std::endl;
                 std::this_thread::sleep_for(5s);
@@ -114,8 +113,9 @@ int main(int argc, char* argv[]) {
     const char* device_path = argv[1];
     int device = -1;
 
+    std::cout << "----- start ----- " << std::endl;
     while(true) {
-        std::cout << "----- start ----- " << std::endl;
+        std::cout << "open device" << std::endl;
         device = open(device_path, O_RDONLY);
 
         if (device < 0) {
@@ -125,7 +125,7 @@ int main(int argc, char* argv[]) {
         }
 
         std::string device_name = get_input_device_name(device);
-        std::cout << "device opened, read from: " << device_path << " - " << device_name << std::endl;
+        std::cout << "device opened, reading from: " << device_path << " - " << device_name << std::endl;
 
         try {
             poll_events(device);
