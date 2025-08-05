@@ -3,7 +3,7 @@ Description=Quad-Tap Gesture Daemon
 After=graphical-session.target
 
 [Service]
-ExecStart=/opt/quad_tap_zoom /dev/input/by-id/<id>
+ExecStart=/opt/quad_tap_zoom/quad_tap_zoom <username> /dev/input/by-id/<linkname>
 Restart=on-failure
 
 [Install]

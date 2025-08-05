@@ -6,7 +6,7 @@
 #include <thread>
 #include <chrono>
 
-#define EXPECTED_ARGUMENT_COUNT 2
+#define EXPECTED_ARGUMENT_COUNT 3
 
 typedef enum {
     IDLE,
@@ -17,6 +17,8 @@ typedef enum {
 } gesture_state_t;
 
 using namespace std::chrono_literals;
+
+const char* username;
 
 std::string get_input_device_name(int device) {
     char device_name[256];
@@ -30,8 +32,8 @@ std::string get_input_device_name(int device) {
     return device_name;
 }
 
-void print_help(char* app_name) {
-    std::cerr << "command usage: " << app_name << " /dev/input/eventX" << std::endl;
+void print_help(const char* app_name) {
+    std::cerr << "command usage: " << app_name << " <username> /dev/input/event<X>" << std::endl;
 }
 
 void gesture_state_transition(gesture_state_t& gesture_state, int value, double time_delta) {
@@ -53,8 +55,9 @@ void toggle_magnification_glas() {
     static bool active = false;
     active = !active;
 
-    std::string command = "gsettings set org.gnome.desktop.a11y.applications screen-magnifier-enabled ";
-    command += active ? "true" : "false";
+    std::string command = "/opt/quad_tap_zoom/set_magnification_enabled_for_user.sh ";
+    command += username;
+    command += active ? " true" : " false";
 
     // fork, execl, waitppid
     system(command.c_str());
@@ -106,11 +109,13 @@ void poll_events(int device) {
 
 int main(int argc, char* argv[]) {
     if(argc != EXPECTED_ARGUMENT_COUNT) {
-        print_help(argv[0]);
+        const char* app_name = argv[0];
+        print_help(app_name);
         return 1;
     }
 
-    const char* device_path = argv[1];
+    username = argv[1];
+    const char* device_path = argv[2];
     int device = -1;
 
     std::cout << "----- start ----- " << std::endl;
